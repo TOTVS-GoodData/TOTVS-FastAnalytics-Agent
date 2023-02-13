@@ -1,0 +1,23 @@
+<po-page-list p-title= "{{ operation }}">
+  <form #javaForm="ngForm">
+    <div class="po-row">
+      <div class="form-group po-row">
+        <po-input name="nameConfiguration" class="form-control po-md-12 po-lg-12" p-label="Nome da Configuração" p-required [(ngModel)]="java.name"></po-input>
+      </div>
+    </div>  
+    <div class="form-group">              
+      <po-grid #javaParams
+        (keydown.enter)="focusParams()"
+        class="form-control"
+        [p-data]="java.params"
+        [p-columns]="columnsParams">
+      </po-grid>     
+    </div>
+
+    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    <div class="row button-save">
+      <button class="po-button po-text-ellipsis" type="button" (click)="backJavaList()"> Voltar </button> 
+      <button class="po-button po-text-ellipsis po-button-primary" type="button" (click)="saveJavaConfiguration()" [disabled]="!javaForm.valid"> Salvar </button> 
+    </div>
+  </form>      
+</po-page-list>

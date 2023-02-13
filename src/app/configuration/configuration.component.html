@@ -1,0 +1,54 @@
+<po-page-list p-title = "Configurações">
+
+  <form #configurationForm="ngForm">
+    
+    <div class="po-row">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">TOTVS Agent Analytics</span>
+      &nbsp;
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Versão {{ version }}</span>
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+    
+    &nbsp;
+    
+    <div class="po-row fields">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Serviço Agent</span>
+      &nbsp;
+      <po-number
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="serverPort"
+        [(ngModel)]="serverPort"
+        p-label="Porta Servidor Json">
+      </po-number>
+
+      <po-number
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        p-min="1"
+        name="intervalExecutionServer"
+        [(ngModel)]="configuration.intervalExecutionServer"
+        p-label="Intervalo em minutos de execução do Serviço">
+      </po-number>      
+
+      <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="showQuery"
+        [(ngModel)]="configuration.showQuery"
+        p-label-off="Não exibe queries ao executar o Agent"
+        p-label-on="Exibe queries ao executar o Agent"        
+        [p-label-position]="showQueriesPosition">
+      </po-switch>
+
+    </div>
+    
+    &nbsp;
+
+    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />   
+
+    &nbsp;
+
+    <div class="row button-save">
+      <button class="po-button po-text-ellipsis po-button-primary" type="button" (click)="saveConfiguration($event)" [disabled]="!configurationForm.valid"> Salvar </button> 
+    </div>
+
+  </form>
+    
+</po-page-list>

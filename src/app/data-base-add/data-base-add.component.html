@@ -1,0 +1,55 @@
+<po-page-list p-title = "{{ operation }}"> 
+  <form #dataBaseForm="ngForm">
+    <div class="po-row">
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Banco de Dados</span>
+        <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Informações de conexão do banco de dados</span>
+        <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+
+    <div class="form-group po-row">
+        <po-input name="name" class="form-control po-md-12 po-lg-12" p-label="Nome da Configuração" p-required [(ngModel)]="dataBase.name"></po-input>
+    </div>
+ 
+    <div class="form-group po-row">
+        <po-select 
+            name="jdbcSource" 
+            class="form-control po-md-6 po-lg-6" 
+            (p-change)="enableJDBCOptions( $event )"
+            p-label="Base de Dados" 
+            [p-options]="jdbcSources" 
+            p-required
+            [(ngModel)]="dbSource">
+        </po-select>
+        <po-button class="po-sm-12 po-md-6 po-lg-6 po-xl-6 buttom-teste-bd"
+            (p-click)="testDataBaseConnection()"
+            p-label="Testar Conexão"
+            p-small="false"
+            p-icon="po-icon-database"
+            p-disabled="{{!dataBaseForm.valid}}">
+        </po-button>            
+    </div>
+
+    <div class="form-group po-row">
+        <po-input name="jdbcUser" class="form-control po-md-6 po-lg-6" p-icon="po-icon-user" p-label="Usuário" p-required [(ngModel)]="dataBase.jdbc_username"></po-input>
+        <po-password name="jdbcPassword" class="form-control po-md-6 po-lg-6" p-label="Senha" p-required [(ngModel)]="dataBase.jdbc_password"></po-password>
+    </div>
+
+    <div class="form-group po-row">
+        <po-input name="jdbcDriver" class="form-control po-md-6 po-lg-6" p-label="Driver"  [p-disabled]="(dbSource !== 'Outros')" p-required [(ngModel)]="dataBase.jdbc_driver"></po-input>
+        <po-input name="jdbcDriverPath" class="form-control po-md-6 po-lg-6" p-label="Caminho do Driver" [p-disabled]="(dbSource !== 'Outros')" p-required [(ngModel)]="dataBase.jdbc_driver_path"></po-input>
+        <po-input name="jdbcUrl" class="form-control po-md-6 po-lg-6" p-label="URL"  p-required [(ngModel)]="dataBase.jdbc_url"></po-input>
+        <po-input name="jdbcSchema" class="form-control po-md-6 po-lg-6" p-label="Schema do banco de dados" [p-disabled]="(dbSource !== 'Oracle')" [(ngModel)]="dataBase.jdbc_oracle_current_schema"></po-input>
+    </div>
+
+    &nbsp;
+    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    <div class="row button-save">
+        <button class="po-button po-text-ellipsis" type="button" (click)="backDataBaseList()"> Voltar </button> 
+        <button class="po-button po-text-ellipsis po-button-primary" type="button" (click)="saveDataBase($event)" [disabled]="!dataBaseForm.valid"> Salvar </button> 
+    </div>
+
+    &nbsp;
+
+  </form>
+  
+</po-page-list> 

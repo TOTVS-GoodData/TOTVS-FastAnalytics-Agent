@@ -1,0 +1,28 @@
+<po-page-list p-title = "Agendamento" [p-actions]="actions">
+
+  <po-modal #modal 
+    p-title={{modalTitle}}
+    [p-primary-action]="confirm"
+    [p-secondary-action]="close">
+  </po-modal> 
+
+  <div class="scheduleConfiguration">
+    
+    &nbsp;
+  </div>
+
+  <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+  <div class="po-row">
+    <span class="title po-sm-11 po-md-11 po-lg-11 po-xl-11">Serviço do Agent</span>
+    <div class="div-status-service po-sm-1 po-md-1 po-lg-1 po-xl-1">
+      <label class="{{statusService === 'Em Execução' ? 'status-service service-running' : 'status-service service-stoped'}}">{{ statusService }}</label>
+    </div>
+    <span class="po-sm-12 po-md-12 po-lg-12 po-xl-12">Instala e inicia o Agent como um serviço no sistema</span>
+    &nbsp;
+    <po-button-group
+      class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+      [p-buttons]="agentAction">
+    </po-button-group>
+  </div>
+
+</po-page-list>

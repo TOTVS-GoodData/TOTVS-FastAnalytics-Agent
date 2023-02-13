@@ -1,0 +1,48 @@
+<po-page-list p-title="Monitor de Execução">
+    <po-table class="executions"
+        p-container="shadow"
+        p-sort="true"
+        p-height="900"
+        p-striped="true"
+        [p-columns]="columnsExecutions"
+        [p-actions]="actionExecutions"
+        [p-items]="dataExecutions">
+    </po-table>
+
+    <po-modal #modalExecution
+        p-click-out="true"
+        p-size="auto"
+        p-title="Detalhes da Execução">
+
+        <div class="details">
+            <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Servidor Local</span>
+
+            &nbsp;
+            
+            <po-table class="gridDetails"
+                p-height="270"
+                [p-items]="localDetails"
+                [p-columns]="columnsDetails">
+            </po-table>
+            
+            <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+            <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Servidor GoodData</span>
+
+            &nbsp;
+            
+            <po-table class="gridDetails"
+                p-height="270"
+                [p-items]="goodDataDetails"
+                [p-columns]="columnsDetails">
+            </po-table>
+        </div>
+    </po-modal>
+
+    <po-modal #modalCancel 
+        p-title="Deseja realmente alterar o status da execução para cancelado?"
+        [p-primary-action]="confirmModalCancel"
+        [p-secondary-action]="closeModalCancel">
+    </po-modal>     
+    
+</po-page-list>
+        

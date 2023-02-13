@@ -1,0 +1,51 @@
+.line{
+    border: 0;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.title{
+    font-family: NunitoSans-ExtraLight;
+    line-height: 48px;
+    color: #0c9abe;
+    text-align: left;
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.subtitle{
+    color: #4a5c60;
+}
+
+.textConfiguration{
+    line-height: 48px;
+    color: #0c9abe;
+}
+
+div.scheduleConfiguration{
+    width: auto;
+    max-height: 615px;
+    overflow: auto;
+    border-style: none;
+}
+
+.status-service{
+    text-align: center;
+    color: white;
+    margin-top: 15px; 
+    display: block; 
+    width: 100%;
+}
+
+.div-status-service{
+    text-align: right; 
+}
+
+.service-running{
+    background-color: #00b28e;
+}
+
+.service-stoped{
+    background-color: #c64840;
+}

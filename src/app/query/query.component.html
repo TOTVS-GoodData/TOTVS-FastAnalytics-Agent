@@ -1,0 +1,87 @@
+<po-page-list p-title = "Query">
+
+
+  <div class="po-sm-6 po-md-6 po-lg-6 po-xl-6">
+    <button class="po-button po-text-ellipsis po-button-primary btn-new" type="button" (click)="insertQuery()"> Nova </button> 
+  </div>
+
+  <div class="po-sm-6 po-md-6 po-lg-6 po-xl-6 export">
+    <button class="po-button po-text-ellipsis po-button-primary btn-export" type="button" (click)="exportQuery()"> Exportar </button> 
+  </div>
+
+  <div class="po-sm-12 po-md-12 po-lg-12 po-xl-12 list-project list-project-empty" *ngIf="archives.length === 0">
+    <span>Nenhum dado encontrado</span> 
+  </div>
+
+  <div class="po-sm-12 po-md-12 po-lg-12 po-xl-12 list-project">
+    
+  </div>
+
+
+  <po-modal #queryModal 
+    p-title={{modalTitle}}
+    [p-primary-action]="confirm"
+    [p-secondary-action]="close">
+    <form #queryForm="ngForm" class="po-row">
+
+      <po-select [p-disabled]="!inserting"
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="projectId"
+        p-label="Projeto"
+        p-required="true"
+        [(ngModel)]="queryEdit.projectId"
+        [p-options]="listProjectNew">
+      </po-select> 
+
+      <po-input
+        class="po-sm-6 po-md-6 po-lg-6 po-xl-6"
+        name="nameQuery" p-label="Nome do Arquivo" p-required [(ngModel)]="queryEdit.fileName" [p-disabled]="!inserting">
+      </po-input>
+
+      <po-select
+        class="po-sm-3 po-md-3 po-lg-3 po-xl-3"
+        name="typeQuery" p-label="Tipo" [p-options]="typeOptions" 
+        p-required [(ngModel)]="queryEdit.type" [p-disabled]="!inserting">
+      </po-select> 
+      
+    
+      <po-select
+        class="po-sm-3 po-md-3 po-lg-3 po-xl-3"
+        name="recurrenceQuery" p-label="Recorrência" [p-options]="recurrenceOptions"
+        p-required [(ngModel)]="queryEdit.recurrence" [p-disabled]="!inserting">
+      </po-select> 
+  
+      &nbsp;
+
+      <textarea class="po-textarea po-sm-12 po-md-12 po-lg-12 po-xl-12 query-text"
+        name="query" [(ngModel)]="queryEdit.query" rows="20">
+      </textarea>
+
+    </form>      
+  </po-modal> 
+
+  <po-modal #modalDelete
+    p-title="Deseja realmente remover a query?"
+    [p-primary-action]="confirmModalDelete"
+    [p-secondary-action]="closeModalDelete">
+  </po-modal>    
+  
+  <po-modal #modalExport
+    p-title="Exportar"
+    [p-primary-action]="confirmModalExport"
+    [p-secondary-action]="closeModalExport">
+
+    <po-select 
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="projectId"
+        p-label="Projeto"
+        p-required="true"
+        [(ngModel)]="projectExport.id"
+        [p-options]="listProject">
+    </po-select> 
+
+  </po-modal>    
+
+  <po-loading-overlay [hidden]="isHideLoading" p-text="Processando"></po-loading-overlay>
+  
+</po-page-list>

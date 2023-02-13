@@ -1,0 +1,124 @@
+<po-page-list p-title = "{{ operation }}">
+
+  <form #scheduleForm="ngForm">
+    <div class="form-group po-row">
+      <po-input name="name" class="form-control po-sm-12 po-md-12 po-lg-12 po-xl-12" p-label="Nome do Agendamento" p-required [(ngModel)]="schedule.name"></po-input>
+    </div>
+    
+    <div class="form-group po-row">
+      <po-select
+          class="form-control po-sm-12 po-md-12 po-lg-12 po-xl-12"
+          name="schedule"
+          (p-change)="setDbSource()"
+          [(ngModel)]="schedule.projectId"
+          p-label="Projeto"
+          [p-options]="listProject"
+          p-required="true">
+      </po-select>
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+    
+    <div class="po-row">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros SQL</span>
+      <span class="subtitle po-sm-11 po-md-11 po-lg-11 po-xl-11">Parâmetros das consultas de extração</span>
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+
+    <div class="grid-height">
+        <po-grid #gridSqlParams
+        class="form-control"
+        (keydown.enter)="focusSqlParams()"
+        [p-data]="schedule.sqlParams"
+        [p-columns]="columnsSql">
+      </po-grid>     
+    </div>
+
+    &nbsp;
+
+    <div class="row button-save">
+      <button class="k-button k-grid-remove-command" (click)="showModalSqlParams()">
+          <span class="po-icon po-icon-zoom-in"></span>
+      </button>
+    </div>
+    
+    <div class="po-row grid-title">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros ETL</span>
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros das consultas do ETL</span>
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+
+    <po-grid #gridEtlParams
+      class="form-control"
+      (keydown.enter)="focusEtlParams()"
+      [p-data]="schedule.etlParams"
+      [p-columns]="columnsEtl">
+    </po-grid>
+    
+    &nbsp;
+
+    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />   
+    
+    &nbsp;     
+
+    <div class="po-row">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Agent</span>
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Informações da execução do Agent</span>
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+
+    <div class="form-group po-sm-12 po-md-2 po-lg-2 po-xl-2">
+      <span class="po-sm-12 po-md-12 po-lg-12 po-xl-12 margin-zero small-size">Data de Início</span>             
+      <input name="startDateTime" class="form-control po-input dateTime-margin" type="datetime-local" [(ngModel)]="schedule.startDateTime"/>
+    </div>    
+
+    <div class="form-group po-row">
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+      <span class="po-field-title po-sm-12 po-md-12 po-lg-12 po-xl-12">Intervalo de Execução do Agent</span> 
+      
+      <po-checkbox-group
+        class="form-control po-sm-12 po-md-4 po-lg-4 po-xl-4"            
+        (p-change)="changeInterval()"
+        [p-options]="intervalOptions"
+        name="dailySelected"
+        [(ngModel)]="dailySelected"
+        p-indeterminate="true">
+      </po-checkbox-group>
+      
+      <div class="po-sm-12 po-md-8 po-lg-8 po-xl-8"> 
+        <label class="po-sm-3 po-md-1 po-lg-1 po-xl-1 small-size interval-hours-label"> A cada </label> 
+        <po-number
+          class="form-control po-sm-6 po-md-2 po-lg-2 po-xl-2"
+          (p-change)="validHour()"
+          name="hourInterval"
+          [p-disabled]="halfHour || daily"
+          p-max=23
+          p-min=01
+          [(ngModel)]="hours">
+        </po-number>  
+        <label class="po-sm-3 po-md-5 po-lg-5 po-xl-5 small-size interval-hours-label"> hora(s) </label> 
+      </div>    
+
+    </div>
+
+    &nbsp;
+    
+    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    <div class="row button-save">
+      <button class="po-button po-text-ellipsis" type="button" (click)="backScheduleList()"> Voltar </button> 
+      <button class="po-button po-text-ellipsis po-button-primary" type="button" (click)="saveSchedule($event)" [disabled]="!scheduleForm.valid"> Salvar </button> 
+    </div>
+  </form>
+
+  <po-modal #modalSqlParams
+    p-title="Parâmetros SQL"
+    p-size="lg">
+    <po-grid #gridSqlParamsModal
+      class="form-control"
+      (keydown.enter)="focusSqlParams()"
+      [p-data]="schedule.sqlParams"
+      [p-columns]="columnsSql">
+    </po-grid>     
+  </po-modal>     
+
+    
+</po-page-list>

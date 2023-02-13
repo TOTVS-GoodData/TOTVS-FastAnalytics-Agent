@@ -1,0 +1,98 @@
+/* You can add global styles to this file, and also import other style files */
+.po-select-button {
+    color: black;
+}    
+
+.po-select:focus+.po-field-container-content .po-select-button {
+    border: 1px solid #0c9abe!important;
+    color: black !important;
+}
+
+.thf-list-item-container {
+    overflow: auto;
+}
+
+.k-grid input[type=checkbox] {
+    visibility: hidden !important;
+}
+
+.thf-list-actions {
+    right: 85%;
+}
+
+.thf-list-more-button {
+    display: grid;
+}
+
+.po-field-optional {
+    visibility: hidden;
+}
+
+.grid-display{
+    display: flex;
+}
+
+.grid-margin-left{
+    margin-left: 10%;
+}
+
+.line{
+    border: 0;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.title{
+    font-family: NunitoSans-ExtraLight;
+    line-height: 48px;
+    color: #0c9abe;
+    text-align: left;
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.subtitle{
+    color: #4a5c60;
+}
+
+.button-save{
+    text-align: right;
+}
+
+.po-switch-container-on {
+    background-color: #90cede;
+}
+
+.line{
+    border: 0;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.title{
+    font-family: NunitoSans-ExtraLight;
+    line-height: 48px;
+    color: #0c9abe;
+    text-align: left;
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.po-color-12 {
+    background-color: gray;
+}
+
+.po-icon {
+    font-size: larger;
+} 
+
+.po-table-main-container {
+    max-height: 865px;
+    overflow-x: auto;
+}
+
+.po-table-container-fixed-inner::-webkit-scrollbar, .po-table-main-container::-webkit-scrollbar {
+    width: 10px;
+}

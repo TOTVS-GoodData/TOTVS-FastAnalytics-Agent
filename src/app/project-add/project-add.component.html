@@ -1,0 +1,218 @@
+<po-page-list p-title = "{{ operation }}"> 
+    <form #projectForm="ngForm">
+        <div class="po-row">
+            <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">GoodData</span>
+            <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Informações do projeto no GoodData</span>
+            <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+        </div>
+
+        <div class="form-group po-row">
+            
+            <po-select
+                (p-change)="onChangeLineProject()"
+                class="form-control po-md-3 po-lg-3"
+                name="lineProduct"
+                [(ngModel)]="project.lineProduct"
+                p-label="Tipo Agent"
+                [p-options]="[{label: 'Fast Analytics', value: 1}, {label: 'Smart Analytics', value: 2}]"
+                p-required="true">
+            </po-select> 
+
+            <div class="form-control po-md-9 po-lg-9 typeProduct">
+                <po-info
+                    class="form-control"
+                    name="typeProduct"
+                    p-label="Linha de Produto"
+                    [p-orientation]="orientation"
+                    p-value="{{project.typeProduct === 'P' ? 'Protheus' : project.typeProduct === 'D' ? 'Datasul' : 'RM'}}">
+                </po-info>
+
+            </div>
+        </div>
+            
+        <div class="form-group po-row">    
+
+            <div class="po-sm-12 po-md-12 po-lg-12 po-xl-12 margin-zero" [hidden]="(project.lineProduct===1)">
+                
+                <po-input 
+                    name="selectFileMyProperties"
+                    class="form-control po-sm-12 po-md-5 po-lg-5 po-xl-5 margin-line-product" 
+                    p-label="Arquivo .properties de queries" 
+                    [(ngModel)]="project.pathMyProperties">
+                </po-input>
+                
+                <po-button class="po-sm-12 po-md-1 po-lg-1 po-xl-1 buttom-properties"
+                    name="btnSelectFileMyProperties"
+                    (p-click)="selectFileMyProperties()"
+                    p-icon="po-icon-folder"
+                    p-small="false">
+                </po-button>  
+
+                <div class="po-sm-12 po-md-6 po-lg-6 po-xl-6 smartOptions">
+                    <po-switch class="subtitle po-sm-12 po-md-6 po-lg-6 po-xl-6"
+                        name="tsa"
+                        [(ngModel)]="project.gdc_tsa"
+                        p-label-on="Padrão Smart Analytics"
+                        p-label-off="Padrão Smart Analytics"
+                        [p-label-position]="smartOptionsPosition">
+                    </po-switch>
+                    <po-switch class="subtitle po-sm-12 po-md-6 po-lg-6 po-xl-6"
+                        name="unlock"
+                        [(ngModel)]="project.gdc_unlock"
+                        p-label-on="Verifica versão ETL/Modelagem"
+                        p-label-off="Verifica versão ETL/Modelagem"
+                        [p-label-position]="smartOptionsPosition">
+                    </po-switch>
+                </div>
+            </div>
+    
+            <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12"/>
+        </div>
+
+        <div class="form-group po-row">
+            <po-input name="user" class="form-control po-md-6 po-lg-6" p-icon="po-icon-user" p-label="Usuário" p-required [(ngModel)]="project.gdc_username"></po-input>
+            <po-password name="password" class="form-control po-md-6 po-lg-6" p-label="Senha" p-required [(ngModel)]="project.gdc_password" (keydown.enter)="enterPassword($event)"></po-password>
+            &nbsp;
+            <po-button
+                class="po-md-12 po-lg-12"
+                p-label="Carregar Projetos"
+                [p-disabled]="( project.gdc_username === undefined ) || ( project.gdc_password === undefined ) ||
+                              ( project.gdc_username === '' ) || ( project.gdc_password === '' )"
+                (p-click)="loadProjectBanner()">
+            </po-button>
+            &nbsp;
+        </div>
+
+        <div class="form-group po-row">
+            
+            <po-select
+                (p-change)="onChangeProject()"
+                class="form-control po-md-12 po-lg-12"
+                name="projectId"
+                [(ngModel)]="project.gdc_projectId"
+                p-label="Projeto"
+                [p-options]="listProjects"
+                p-required="true">
+            </po-select> 
+
+            <po-select
+                (p-change)="onChangeProcess()"            
+                class="form-control po-md-12 po-lg-12"
+                name="process"
+                [(ngModel)]="project.gdc_etl_process_url"
+                p-label="Processo URL"
+                [p-options]="listProcess"
+                p-required="true">
+            </po-select> 
+
+            <po-select
+                class="form-control po-md-12 po-lg-12"
+                name="graph"
+                [(ngModel)]="project.gdc_etl_graph"
+                p-label="Graph"
+                [p-options]="listGraph"
+                p-required="true">
+            </po-select> 
+            
+        </div>
+
+        <div class="form-group po-row">
+            <po-input name="zipFile" class="form-control po-md-12 po-lg-12" p-label="Arquivo Zip" p-required [(ngModel)]="project.gdc_upload_archive"></po-input>
+            <po-input name="uploadUrl" class="form-control po-md-12 po-lg-12" p-label="URL para upload do arquivo zip" p-required [(ngModel)]="project.gdc_upload_url"></po-input>            
+        </div>
+
+        <div class="form-group po-row">
+            <po-select
+                class="form-control po-sm-12 po-md-12 po-lg-11 po-xl-11"
+                name="dataBase"
+                [(ngModel)]="project.dataBaseId"
+                p-label="Banco de Dados"
+                [p-options]="listDataBase"
+                p-required="true">
+            </po-select>
+            <div class="form-control po-sm-12 po-md-12 po-lg-1 po-xl-1">
+                <button class="po-button po-text-ellipsis buttom-add" type="button" (click)="dataBaseAdd()">
+                    <span class="po-icon po-icon-plus"></span>
+                </button>            
+            </div>
+        </div>
+
+        <div class="form-group po-row" *ngIf="(project.typeProduct !== 'P')">
+            <po-input 
+                name="selectFolderQueries"
+                class="{{project.typeProduct === 'R' ? 'form-control po-sm-12 po-md-8 po-lg-8 po-xl-8 margin-line-product' : 'form-control po-sm-12 po-md-12 po-lg-11 po-xl-11 margin-line-product'}}" 
+                p-label="Diretório de Queries" 
+                [(ngModel)]="project.gdc_query_folder"
+                [p-required]="(project.typeProduct !== 'P')">
+            </po-input>
+        
+            <po-button class="po-sm-12 po-md-1 po-lg-1 po-xl-1 buttom-properties"
+                name="btnselectFolderQueries"
+                (p-click)="selectFolder(2)"
+                p-icon="po-icon-folder"
+                p-small="false">
+            </po-button>  
+
+            <po-input *ngIf="(project.typeProduct === 'R')"
+                name="selectFolderScripts"
+                class="form-control po-sm-12 po-md-3 po-lg-3 po-xl-3 margin-line-product" 
+                p-label="Pasta de Scripts" 
+                [(ngModel)]="project.gdc_script_folder"
+                [p-required]="(project.typeProduct === 'R')">
+            </po-input>
+        </div>    
+
+        <div class="form-group po-row">
+            <po-select
+                class="form-control po-sm-12 po-md-12 po-lg-11 po-xl-11"
+                name="java"
+                [(ngModel)]="project.javaConfigurationId"
+                p-label="Configuração Java"
+                [p-options]="listJava"
+                p-required="false">
+            </po-select>          
+            <div class="form-control po-sm-12 po-md-12 po-lg-1 po-xl-1">
+                <button class="po-button po-text-ellipsis buttom-add" type="button" (click)="javaAdd()">
+                    <span class="po-icon po-icon-plus"></span>
+                </button>            
+            </div>        
+        </div>    
+
+        <div class="form-group po-row">
+            <po-input class="form-control po-sm-12 po-md-8 po-lg-8 po-xl-8" name="inputWildCard"
+                p-label="Diretório de arquivos para upload" [(ngModel)]="project.filesystem_input_dir">
+            </po-input>
+            <po-button class="po-sm-12 po-md-1 po-lg-1 po-xl-1 buttom-folder"
+                (p-click)="selectFolder(1)" 
+                p-icon="po-icon-folder"
+                p-small="false">
+            </po-button>            
+            <po-input name="wildcard" class="form-control po-sm-12 po-md-3 po-lg-3 po-xl-3" p-label="Tipo de arquivo" [(ngModel)]="project.filesystem_wildcard"></po-input>
+        </div>
+        
+        &nbsp;
+
+        <div class="row button-save">
+            <button class="po-button po-text-ellipsis" type="button" (click)="backProjectList()"> Voltar </button> 
+            <button class="po-button po-text-ellipsis po-button-primary" type="button" (click)="saveProject($event)" [disabled]="!projectForm.valid"> Salvar </button> 
+        </div>
+
+        &nbsp;
+
+    </form>
+
+    <app-modal id="modal-data-base" *ngIf="showModalDataBase">
+        <app-data-base-add 
+            [modal]="true"
+            (closeModal)="closeModalDataBase()">
+        </app-data-base-add>
+    </app-modal>
+
+    <app-modal id="modal-java" *ngIf="showModalJava">
+        <app-java-add
+            [modal]="true"
+            (closeModal)="closeModalJava()">
+        </app-java-add>
+    </app-modal>
+
+</po-page-list> 

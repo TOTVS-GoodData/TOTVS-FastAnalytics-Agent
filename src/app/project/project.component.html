@@ -1,0 +1,46 @@
+<po-page-list p-title="Cadastro de Projetos" [p-actions]="actionsComponent">
+  <po-list-view p-property-title="title" [p-items]="projects" [p-actions]="this.setoptions()">
+    <ng-template p-list-view-content-template let-item>
+      <div class="po-row">
+        <po-info class="po-md-3" p-label="Projeto" [p-value]="item.gdc_projectId" />
+        <po-info class="po-md-3" p-label="Graph" [p-value]="item.gdc_etl_graph" />
+        <po-info class="po-md-3" p-label="Banco de Dados" [p-value]="item.dataBaseId" />
+        <po-info class="po-md-3" p-label="Linha de Produto" [p-value]="item.lineProduct" />
+        <po-info *ngIf="item.gdc_query_folder" class="po-md-12" p-label="Pasta Query" [p-value]="item.gdc_query_folder" />
+      </div>
+    </ng-template>
+  </po-list-view>
+  
+  
+    <po-loading-overlay [hidden]="isHideLoading" p-text="Processando"></po-loading-overlay>
+    
+    <po-modal #modal 
+        p-title={{modalTitle}}
+        [p-primary-action]="confirm"
+        [p-secondary-action]="close">
+    </po-modal> 
+
+  <po-modal #modal_1
+    p-title="Preencha abaixo o produto contratado pelo cliente"
+    [p-primary-action]="modal_contract_confirm"
+    [p-secondary-action]="modal_contract_close"
+    p-size="auto"
+    p-hide-close="true"
+    p-click-out="true">
+    <form #projectForm="ngForm">
+      <po-select
+        class="form-control po-md-6"
+        name="po_modalidadeContratacao"
+        [(ngModel)]="modalidadeContratacao"
+        p-label="Modalidade de Contratação"
+        [p-options]="_CNST_MODALIDADE_CONTRATACAO"
+        p-required="true">
+      </po-select>
+      <po-input name="po_codigoT" class="form-control po-md-6" p-label="Código T do Cliente" p-required="true" [(ngModel)]="codigoT" ></po-input>
+      <po-modal-footer>
+        <po-button p-label="Fechar" (p-click)="modal_contract_close()"></po-button>
+        <po-button p-label="Confirmar" (p-click)="modal_contract_confirm()" p-kind="primary" [p-disabled]="!projectForm.valid"></po-button>
+      </po-modal-footer>
+    </form>
+  </po-modal>
+</po-page-list>

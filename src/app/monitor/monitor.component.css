@@ -1,0 +1,11 @@
+div.details{
+    width: auto;
+    height: 740px;
+    overflow: hidden;
+    border-style: none;
+    padding:4px;
+}
+
+.gridDetails {
+    overflow: hidden;
+}

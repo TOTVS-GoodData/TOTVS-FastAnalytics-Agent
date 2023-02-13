@@ -1,0 +1,43 @@
+@media screen and (max-width: 1366px) {
+    .small-size{
+        font-family: NunitoSans;
+        font-size: 14px;
+        line-height: 24px;
+        height: 32px;
+        margin-top: 13px !important;
+    }
+}   
+
+.label-field{
+    margin-top: 17px;
+}
+
+.dateTime-margin{
+    margin-top: 5px !important;
+    margin-bottom: 15px !important;    
+}
+
+.interval-label{
+    text-align: right;
+}
+.dateTime-margin{
+    margin-top: 5px !important;
+    margin-bottom: 15px !important;    
+}
+
+.grid-title{
+    margin-top: 3%;
+}
+
+.margin-zero{
+    padding: 0px;
+}
+
+.interval-hours-label{
+    margin-top: 2%;
+}
+
+.grid-height{
+    max-height: 300px;
+    overflow: auto;
+}
