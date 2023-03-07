@@ -1,4 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require( 'electron' )
+const { autoUpdater } = require("electron-updater");
+const { app, BrowserWindow, ipcMain, dialog } = require( 'electron' );
+const { log } = require("electron-log");
 const server =  require( './server' );
 const agent =  require( './execute' );
 const path =  require( 'path' );
@@ -8,14 +10,19 @@ const process =  require( './process' );
 let win;
 
 function createWindow () {
- 
+  
   // Cria uma janela de navegação.
   win = new BrowserWindow( {
     backgroundColor: '#FFFFFF',
     icon: __dirname + '/dist/totvs-agent-app/analytics.ico',
     show: false
   });
-
+  
+  //autoUpdater.checkForUpdatesAndNotify()
+  //setInterval(() => {
+  //  autoUpdater.checkForUpdates()
+  //}, 60000)
+  
   // Carrega a página principal do sistema que foi 
   // gerada na distribuição no processo de build
   win.loadURL( `file://${__dirname}/dist/totvs-agent-app/index.html` );
@@ -165,10 +172,59 @@ function createWindow () {
   ipcMain.on( 'setStatusExecution', ( event, idExecutionCancel, status ) => {
     event.returnValue = process.setStatusExecution( idExecutionCancel, status );
   });
-
 }
 
-app.on( 'ready', createWindow )
+function sendStatusToWindow(text) {
+  console.log(text);
+}
+
+autoUpdater.on('checking-for-update', () => {
+  sendStatusToWindow('Checking for update...');
+});
+
+autoUpdater.on('update-available', (info) => {
+  sendStatusToWindow('Update available.');
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  sendStatusToWindow('Update not available.');
+});
+
+autoUpdater.on('error', (err) => {
+  sendStatusToWindow('Error in auto-updater. ' + err);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  sendStatusToWindow(log_message);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  sendStatusToWindow('Update downloaded');
+});
+
+app.on('ready', () => {
+  const level = 'debug';
+  autoUpdater.logger = require("electron-log");
+  autoUpdater.logger.initialize({ preload: true });
+  
+  autoUpdater.logger.transports.file.level = level;
+  autoUpdater.logger.transports.console.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}';
+  autoUpdater.logger.transports.console.level = level;
+  
+  const date = new Date();
+  autoUpdater.logger.transports.file.fileName = `${date.toLocaleDateString('pt-BR')}.log`;
+  autoUpdater.logger.transports.file.level = level;
+  
+  autoUpdater.checkForUpdatesAndNotify();
+  createWindow();
+  
+    //log.
+  //const server = 'https://your-deployment-url.com'
+  //const url = `${server}/update/${process.platform}/${app.getVersion()}`
+});
 
 app.on( 'window-all-closed', function () {
 

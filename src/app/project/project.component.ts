@@ -2,14 +2,14 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgForm } from '@angular/forms';
 import { PoRadioGroupOption } from '@po-ui/ng-components';
-import { PoModalAction, PoModalComponent } from '@po-ui/ng-components';
+import { PoModalAction, PoModalComponent, PoListViewAction } from '@po-ui/ng-components';
 import { PoNotificationService } from '@po-ui/ng-components';
 import { ElectronService } from 'ngx-electronyzer';
 import { Project, DataBase } from '../utilities/interfaces';
 import { ProjectService } from '../service/project.service';
 import { UserService } from '../service/user.service';
 import { Util } from '../shared/util';
-import { optionsProjectType, CNST_MODALIDADE_CONTRATACAO } from '../utilities/constants';
+import { CNST_ERP, CNST_MODALIDADE_CONTRATACAO } from '../utilities/constants';
 
 import { Observable, forkJoin } from 'rxjs';
 
@@ -33,24 +33,22 @@ export class ProjectComponent implements OnInit {
   projectType: string;
   
   
-  opt: any;
-  
-  
+
   protected _CNST_MODALIDADE_CONTRATACAO: any;
   protected modalidadeContratacao: string = null;
   protected codigoT: string = null;
   
-  public setoptions(): Array<any> {
+  protected setoptions(): Array<PoListViewAction> {
     return [
-       { label: 'Editar',  function: 'editProject', url: 'project-add' }
-      ,{ label: 'Excluir', function: 'deleteProject' }
+       { label: 'Editar',  action: this.editProject.bind(this) }
+      ,{ label: 'Excluir', action: this.deleteProject.bind(this) }
     ];
   }
   
-  actionsComponent: Array<{}> = [
+  protected actionsComponent: Array<{}> = [
     { label: 'Novo', action: () => { this.insertProject() }, icon: 'po-icon po-icon-plus' }
   ];
-
+  
   constructor(
      private projectService: ProjectService
     ,private router: Router
@@ -59,11 +57,10 @@ export class ProjectComponent implements OnInit {
     ,private _userService: UserService
     ,private _util: Util
   ) {
-    this.opt = optionsProjectType;
     this._CNST_MODALIDADE_CONTRATACAO = CNST_MODALIDADE_CONTRATACAO;
   }
   
-  ngOnInit(): void {
+  public ngOnInit(): void {
     forkJoin([
        this.projectService.getProjects2()
       ,this.projectService.getDatabases2()
@@ -77,9 +74,16 @@ export class ProjectComponent implements OnInit {
     });
   }
   
-  protected insertProject(): void {
+  private insertProject(): void {
     this.modal_1.open();
   }
+  
+  private editProject(index: string): void {
+    console.log(index);
+    const type = ( this.projectType === undefined ? 'P' : this.projectType );
+    this.router.navigate( [ '/project-add', type, index ] );
+  }
+  
   
   public modal_contract_close(): void {
     this.modalidadeContratacao = null;
@@ -109,10 +113,6 @@ export class ProjectComponent implements OnInit {
     label: 'Confirmar',
   };
   
-  editProject( index: string ) {
-    const type = ( this.projectType === undefined ? 'P' : this.projectType );
-    this.router.navigate( [ '/project-add', type, index ] );
-  }
 
   deleteProject( index: string ) {
     this.isDeleteProject = true;

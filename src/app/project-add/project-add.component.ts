@@ -1,17 +1,46 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PoSelectOption, PoSwitchLabelPosition } from '@po-ui/ng-components';
 import { PoNotification, PoToasterOrientation } from '@po-ui/ng-components';
 import { PoNotificationService } from '@po-ui/ng-components';
 import { ElectronService } from 'ngx-electronyzer';
 import { ModalService } from '../modal/modal.service';
-import { Project } from '../utilities/interfaces';
+import { Project, DataBase, Java, Parameter, GDProject, GDProcess } from '../utilities/interfaces';
 import { DataBaseService } from '../service/data-base.service';
 import { JavaService } from '../service/java.service';
 import { ProjectService } from '../service/project.service';
+import { LoginService } from '../service/login.service';
+import { GoodDataService } from '../service/gooddata.service';
 import { UserService } from '../service/user.service';
 import { PoInfoOrientation } from '@po-ui/ng-components';
 import { SessionService } from '../service/session-service';
+import { CNST_ORIGEM, CNST_ERP, CNST_MODALIDADE_CONTRATACAO, CNST_UPLOAD_URL, CNST_DOMAIN, CNST_EXTENSION } from '../utilities/constants';
+import { Utilities } from '../utilities/utilities';
+
+import { merge, flatMap, map, switchMap, mergeMap } from 'rxjs/operators';
+
+import { forkJoin, Observable } from 'rxjs';
+
+const CNST_FIELD_NAMES: Array<any> = [
+   { key: 'modalidade', value: 'Modalidade de Contratação' }
+  ,{ key: 'erp', value: 'ERP' }
+  ,{ key: 'codigot', value: 'Código T do cliente' }
+  ,{ key: 'modulo', value: 'Módulo' }
+  ,{ key: 'origem', value: 'Origem dos dados' }
+  ,{ key: 'gdc_username', value: 'Usuário' }
+  ,{ key: 'environment', value: 'Domínio' }
+  ,{ key: 'gdc_password', value: 'Senha' }
+  ,{ key: 'gdc_projectId', value: 'Projeto' }
+  ,{ key: 'gdc_upload_url', value: 'URL para upload do arquivo' }
+  ,{ key: 'gdc_etl_process_url', value: 'URL do processo de ETL' }
+  ,{ key: 'gdc_etl_graph', value: 'Graph (CloudConnect)' }
+  ,{ key: 'gdc_upload_archive', value: 'Nome do arquivo' }
+  ,{ key: 'gdc_archive_extension', value: 'Extensão do arquivo' }
+  ,{ key: 'databaseId', value: 'Banco de dados' }
+  ,{ key: 'javaConfigurationId', value: 'Configuração' }
+  ,{ key: 'gdc_query_folder', value: 'Pasta de queries customizadas' }
+  ,{ key: 'gdc_script_folder', value: 'Pasta de scripts customizados' }
+];
 
 @Component({
   selector: 'app-project-add',
@@ -20,26 +49,131 @@ import { SessionService } from '../service/session-service';
 })
 
 export class ProjectAddComponent {
-
+  
+  @ViewChild( 'javaParams', { read: ElementRef } ) javaParams: any;
+  
+  protected _CNST_FIELD_NAMES: any;
+  protected _CNST_UPLOAD_URL: any;
+  protected _CNST_EXTENSION: any;
+  protected _CNST_DOMAIN: any;
+  protected _CNST_MODALIDADE_CONTRATACAO: any;
+  protected _CNST_ERP: any;
+  protected _CNST_ORIGEM: any;
+  protected _CNST_MODULO: any;
+  
   public smartOptionsPosition: PoSwitchLabelPosition = PoSwitchLabelPosition.Left;
   public orientation = PoInfoOrientation.Horizontal;
   public project: Project = new Project();
+  public database: DataBase = new DataBase();
+  public javaConfiguration: Java = new Java();
+  
+  public po_grid_config = [ { column: 'value', label: 'value', width: '100%'} ];
+  
+  /*************************************************/
+  /* MAPEAMENTO DOS NOMES DOS CAMPOS DO FORMULÁRIO */
+  /*************************************************/
+  protected lbl_modalidade: string;
+  protected lbl_erp: string;
+  protected lbl_codigot: string;
+  protected lbl_modulo: string;
+  protected lbl_origem: string;
+  protected lbl_gdc_username: string;
+  protected lbl_environment: string;
+  protected lbl_gdc_password: string;
+  protected lbl_gdc_projectId: string;
+  protected lbl_gdc_upload_url: string;
+  protected lbl_gdc_etl_process_url: string;
+  protected lbl_gdc_etl_graph: string;
+  protected lbl_gdc_upload_archive: string;
+  protected lbl_gdc_archive_extension: string;
+  protected lbl_databaseId: string;
+  protected lbl_javaConfigurationId: string;
+  protected lbl_gdc_query_folder: string;
+  protected lbl_gdc_script_folder: string;
+  
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  
   public operation: string;
-
+  
   public showModalDataBase = false;
   public showModalJava = false;
-
+  
   public listProjects: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   public listProcess: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   public listGraph: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   public listJava: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   public listDataBase: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
-
-  constructor( private _projectService: ProjectService, private _userService: UserService, private _javaService: JavaService,
-    private router: Router, private activatedRoute: ActivatedRoute, private thfNotification: PoNotificationService,
-    private _electronService: ElectronService, private _dataBaseService: DataBaseService,
-    private modalService: ModalService, private _sessionService: SessionService) {
-
+  public listJavaParams: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
+  public listExtensions: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
+  
+  protected no_option_selected: PoSelectOption = { label: '', value: 'null' };
+  
+  constructor(
+     private _projectService: ProjectService
+    ,private _userService: UserService
+    ,private _javaService: JavaService
+    ,private router: Router
+    ,private _utilities: Utilities
+    ,private activatedRoute: ActivatedRoute
+    ,private thfNotification: PoNotificationService
+    ,private _electronService: ElectronService
+    ,private _dataBaseService: DataBaseService
+    ,private modalService: ModalService
+    ,private _sessionService: SessionService
+    ,private _goodDataService: GoodDataService
+    ,private _loginService: LoginService
+  ) {
+    this._CNST_FIELD_NAMES = CNST_FIELD_NAMES;
+    this.lbl_modalidade = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'modalidade'; }).value;
+    this.lbl_erp = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'erp'; }).value;
+    this.lbl_codigot = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'codigot'; }).value;
+    this.lbl_modulo = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'modulo'; }).value;
+    this.lbl_origem = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'origem'; }).value;
+    this.lbl_gdc_username = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_username'; }).value;
+    this.lbl_environment = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'environment'; }).value;
+    this.lbl_gdc_password = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_password'; }).value;
+    this.lbl_gdc_projectId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_projectId'; }).value;
+    this.lbl_gdc_upload_url = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_upload_url'; }).value;
+    this.lbl_gdc_etl_process_url = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_etl_process_url'; }).value;
+    this.lbl_gdc_etl_graph = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_etl_graph'; }).value;
+    this.lbl_gdc_upload_archive = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_upload_archive'; }).value;
+    this.lbl_gdc_archive_extension = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_archive_extension'; }).value;
+    this.lbl_databaseId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'databaseId'; }).value;
+    this.lbl_javaConfigurationId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'javaConfigurationId'; }).value;
+    this.lbl_gdc_query_folder = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_query_folder'; }).value;
+    this.lbl_gdc_script_folder = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'gdc_script_folder'; }).value;
+       
+    this._CNST_EXTENSION = CNST_EXTENSION;
+    this._CNST_DOMAIN = CNST_DOMAIN;
+    this._CNST_UPLOAD_URL = CNST_UPLOAD_URL;
+    this._CNST_MODALIDADE_CONTRATACAO = CNST_MODALIDADE_CONTRATACAO;
+    this._CNST_ORIGEM = CNST_ORIGEM;
+    this._CNST_ERP = CNST_ERP.map((v) => {
+      return { label: v.ERP, value: v.ERP };
+    });
+    this.project.environment = this._CNST_DOMAIN;
+    this.project.gdc_password = 'Gooddata@totvs123';
+    this.project.gdc_username = 'dev.gd@totvs.com.br';
+    this._CNST_MODULO = null;
+    forkJoin([
+       this._projectService.getDatabases2()
+      ,this._projectService.getJavaConfiguration()
+    ]).subscribe((results: [DataBase[], Java[]]) => {
+      this.listDataBase = results[0].map((db: DataBase) => {
+        return { label: db.name, value: db.id };
+      });
+      this.listDataBase.push(this.no_option_selected);
+      this.listJava = results[1].map((j: Java) => {
+        return { label: j.name, value: j.id };
+      });
+      this.listJava.push(this.no_option_selected);
+    });
+    this.listProjects = [];
+       
+       /*
+       
     if ( this._electronService.isElectronApp ) {
       this._electronService.ipcRenderer.on( 'loadDataBase', () => {
         this.loadDataBase().then( ( ) => {
@@ -57,8 +191,8 @@ export class ProjectAddComponent {
         });
       });
     }
-
-    this.listProjects = [];
+*/
+    
     
     this._sessionService.initSession();
     
@@ -77,7 +211,11 @@ export class ProjectAddComponent {
       }
     });
   }
-
+  
+  
+  
+  
+  
   insertProject(modalidadeContratacao: string, codigoT: string) {
     this.operation = 'Cadastrar Projeto';
    // this.loadJava();
@@ -92,286 +230,223 @@ export class ProjectAddComponent {
     this.listProjects = [ { label: project.title + ' - ' + project.gdc_projectId, value: project.gdc_projectId } ];
     this.listProcess = [ { label: project.gdc_etl_process_url, value: project.gdc_etl_process_url } ];
     this.listGraph = [ { label: project.gdc_etl_graph, value: project.gdc_etl_graph } ];
-
+/*
     this.loadJava().then( () => {
       this.loadDataBase().then( () => {
         this.project = project;
         this.project.typeProduct = ( this.project.typeProduct === undefined ? 'P' : this.project.typeProduct );
         this.project.gdc_password = this._electronService.ipcRenderer.sendSync( 'decrypt', this.project.gdc_password );
-        this.loadProjects().then( ( ) => {
-            this.loadProcess( this.project.gdc_projectId );
-            this.loadGraph( this.project.gdc_etl_process_url );
-        }, ( err ) => console.error( err ));
+        //this.loadProjects().then( ( ) => {
+          //  this.loadProcess( this.project.gdc_projectId );
+           // this.loadGraph( this.project.gdc_etl_process_url );
+        //}, ( err ) => console.error( err ));
       });
+    });*/
+  }
+  
+  public folderAdd(): void {
+    
+  }
+  
+  public scriptAdd(): void {
+    
+  }
+  
+  public onChangeContract(): void {
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  
+  public getProjects(): void {
+    this._loginService.doLogin(this.project.gdc_username, this.project.gdc_password, this.project.environment, false)
+      .subscribe((b: boolean) => {
+        return this._goodDataService.init(this._sessionService.USER_ID, this.project.gdc_projectId).subscribe((b: boolean) => {
+          this.listProjects = this._goodDataService.AVAILABLE_PROJECTS.map((p: GDProject) => {
+            return { label: p.name + ' - ' + p.id, value: p.id }
+          });
+          
+          if (this._goodDataService.CURRENT_PROJECT === undefined) {
+            this.project.gdc_projectId = undefined;
+            this.project.gdc_etl_process_url = undefined;
+            this.project.gdc_etl_graph = undefined;
+            
+            this.listProcess = [];
+            this.listGraph = [];
+          } else {
+            this.listProcess = this._goodDataService.CURRENT_PROJECT.processes.map((p: GDProcess) => {
+              return { label: p.name + ' - ' + p.id, value: p.id }
+            });
+            
+            if (this.project.gdc_etl_process_url != undefined) {
+              this.listGraph = this._goodDataService.CURRENT_PROJECT.processes.find((p: any) => { return this.project.gdc_etl_process_url === p.id }).graphs.map((g: string) => {
+                return { label: g, value: g }
+              });
+            }
+          }
+          this._utilities.createNotification('OK', 'Projetos carregados com sucesso!');
+        },(err: any) => {
+          this._utilities.createNotification('ERR', err.error.message);
+        });
+      },
+      (err: any) => {
+        this._utilities.createNotification('ERR', err.error.message);
+      });
+  }
+  
+  public onChangeERP(e: string): void {
+    this._CNST_MODULO = CNST_ERP.filter((v) => v.ERP === e)[0].Modulos;
+    this.project.modulo = null;
+  }
+  
+  public onChangeProject(): void {
+    this._goodDataService.setCurrentProject(this.project.gdc_projectId).subscribe((b: boolean) => {
+      this.listProcess = this._goodDataService.CURRENT_PROJECT.processes.map((p: GDProcess) => {
+        return { label: p.name + ' - ' + p.id, value: p.id }
+      });
+      this.project.gdc_etl_process_url = undefined;
+      
+      this.listGraph = [];
+      this.project.gdc_etl_graph = undefined;
+      
+      this.project.gdc_upload_url = this._CNST_UPLOAD_URL + 'project-uploads/' + this.project.gdc_projectId + '/today/';
+      
+      return null;
     });
   }
-
-  saveProject( event ) {
-
-    event.preventDefault( );
-
-    if ( this.validProject() ) {
-
-      this.project.title = this.getTitle();
-
-      this.project.gdc_password = this._electronService.ipcRenderer.sendSync( 'encrypt', this.project.gdc_password );
-
+  
+  public onChangeProcess(): void {
+    this.project.gdc_etl_graph = undefined;
+    this.listGraph = this._goodDataService.CURRENT_PROJECT.processes.find((p: any) => { return this.project.gdc_etl_process_url === p.id }).graphs.map((g: string) => {
+      return { label: g, value: g }
+    });
+  }
+  
+  public onChangeDatabase(id: string): void {
+    if (id != this.no_option_selected.value) {
+      this._projectService.getDatabases2().subscribe((database: DataBase[]) => {
+        this.database = database.find((db: DataBase) => { return (db.id === id ); });
+      });
+    } else {
+      this.database = new DataBase();
+    }
+  }
+  
+  public onChangeJava(id: string): void {
+    if (id != this.no_option_selected.value) {
+      this._projectService.getJavaConfiguration().subscribe((java: Java[]) => {
+        this.javaConfiguration = java.find((j: Java) => { return (j.id === id ); });
+        this.listJavaParams = this.javaConfiguration.params.map((p: Parameter) => {
+          return { label: p.value, value: p.value };
+        });
+      });
+    } else {
+      this.javaConfiguration = new Java();
+    }
+  }
+  
+  public goToProjects(): void {
+    this.router.navigate(['/project']);
+  }
+  
+  public validProject(): Observable<boolean> {
+    let proj = new Project();
+    
+    // Todo processo de ETL precisa ter um graph preenchido. //
+    if (this.project.gdc_etl_process_url != undefined) {
+      proj.gdc_etl_graph = (proj.gdc_etl_graph != undefined ? proj.gdc_etl_graph : null);
+    }
+    
+    // Regras de negócio do FAST Analytics //
+    if (((this.project.modalidade == 'FAST_1') || (this.project.modalidade == 'FAST_2')) && ((this.project.erp == 'Datasul') || (this.project.erp == 'RM'))) {
+      proj.gdc_query_folder = (proj.gdc_query_folder != undefined ? proj.gdc_query_folder : null);
+      proj.dataBaseId = (proj.dataBaseId != undefined ? proj.dataBaseId : null);
+      
+      if (this.project.erp == 'RM') {
+        proj.gdc_script_folder = (proj.gdc_script_folder != undefined ? proj.gdc_script_folder : null);
+      }
+    }
+    
+    // Ajuste da interface PO.UI (não dispara eventos com valores 'null') //
+    if (this.project.dataBaseId == this.no_option_selected.value) { this.project.dataBaseId = ''; }
+    if (this.project.javaConfigurationId == this.no_option_selected.value) { this.project.javaConfigurationId = ''; }
+    
+    let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, proj).map((p: string) => {
+      if ((this.project[p] == undefined) && (p != 'id')) return p;
+    }).filter((p: string) => { return p != null; });
+    
+    // Validação dos campos de formulário //
+    if (propertiesNotDefined.length > 0) {
+      if (propertiesNotDefined[0] == 'gdc_etl_graph') {
+        this._utilities.createNotification('ERR', 'Campo obrigatório "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value + '" não preenchido. Por favor selecione um graph para ser executado, ou remova a seleção do campo "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === 'gdc_etl_process_url'}).value + '".');
+      } else {
+        this._utilities.createNotification('ERR', 'Campo obrigatório "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value + '" não preenchido.');
+      }
+      
+      return new Observable((obs) => { obs.error(false); });
+    }
+    
+    // Validação das credenciais do GoodData //
+    return this._loginService.doLogin(this.project.gdc_username, this.project.gdc_password, this.project.environment, false)
+      .pipe(switchMap((b: boolean) => {
+      return Promise.resolve(b);
+    }));
+  }
+  
+  public saveProject(): void {
+    this.validProject().subscribe((v: boolean) => {
+      if (v) {
+        this.project.title = this._goodDataService.AVAILABLE_PROJECTS.find((p: GDProject) => { return this.project.gdc_projectId == p.id; }).name;
+        /*
+        console.log(this.project);
+        Object.getOwnPropertyNames.call(Object, this.project).map((p: string) => {
+          if (this.project[p] == null) { this.project[p] = undefined; }
+        });
+        console.log(this.project);
+        */
+        if (this._electronService.isElectronApp) {
+          this.project.gdc_password = this._electronService.ipcRenderer.sendSync( 'encrypt', this.project.gdc_password );
+        }
+        
+        this._projectService.saveProject(this.project).subscribe((res: boolean) => {
+          this._utilities.createNotification('OK', 'Projeto salvo com sucesso.');
+          this.goToProjects();
+        }, error => {
+          this._utilities.createNotification('ERR', error.message);
+        });
+      }
+    });
+  }
       // Muito importante!!!
       // Ao limpar um campo que seja referência em outra estrutura deve eliminar
       // o atributo do json (setar o valor como undefined), pois caso contrário ele ficaria com um valor inválido,
       // o que traria sérios problemas, como por exemplo na exclusão da estrutura pai apagaria todos os filhos
       // com código inválido
-      if ( this.project.javaConfigurationId === '' ) {
+/*      if ( this.project.javaConfigurationId === '' ) {
         this.project.javaConfigurationId = undefined;
       }
 
-      this._projectService
-          .saveProject( this.project )
-          .subscribe( () => {
-            this.backProjectList();
-          }, error => {
-            console.log( error );
-          } );
-    }
-  }
-
-  validProject( ) {
-    let valid = true;
-
-    if ( ( ( this.project.filesystem_input_dir !== undefined ) && ( this.project.filesystem_input_dir !== '' ) ) &&
-      ( ( this.project.filesystem_wildcard === undefined ) || ( this.project.filesystem_wildcard === '') ) ) {
-        const thfNotification: PoNotification = {
-          message: 'Informar a extensão dos arquivos para upload!',
-          orientation: PoToasterOrientation.Top
-        };
-        this.thfNotification.error( thfNotification );
-        valid = false;
-    } else if ( ( this.project.lineProduct ===  2 ) &&
-              ( ( this.project.pathMyProperties === undefined ) || ( this.project.pathMyProperties === '' ) ||
-                ( ! this.project.pathMyProperties.endsWith( '.properties' ) ) ) ) {
-        const thfNotification: PoNotification = {
-          message: 'Informar o caminho do arquivo .properties',
-          orientation: PoToasterOrientation.Top
-        };
-        this.thfNotification.error( thfNotification );
-        valid = false;
-    } else if ( ( ( this.project.typeProduct === 'D') || ( this.project.typeProduct === 'R') ) &&
-            ( this.project.gdc_query_folder === undefined) ) {
-      const thfNotification: PoNotification = {
-        message: 'Informar o caminho do diretório queries',
-        orientation: PoToasterOrientation.Top
-      };
-      this.thfNotification.error( thfNotification );
-      valid = false;
-    } else if ( ( this.project.typeProduct === 'R')  && ( this.project.gdc_script_folder === undefined) ) {
-        const thfNotification: PoNotification = {
-        message: 'Informar o caminho do diretório script',
-        orientation: PoToasterOrientation.Top
-        };
-        this.thfNotification.error( thfNotification );
-        valid = false;
-
-    }
-
-    return valid;
-  }
-
-
-  backProjectList( ) {
-    this.router.navigate( [ '/project' ] );
-  }
-
-  getTitle() {
-    let title = '';
-    const index = this.listProjects.findIndex( project => project.value === this.project.gdc_projectId );
-
-    if ( this.listProjects[index] ) {
-
-      title = this.listProjects[index].label;
-      const finalTitle = title.lastIndexOf( '-' );
-      title = title.slice( 0, finalTitle ).trim();
-
-    }
-    return title;
-  }
-
-  onAdd( event ) {
-    return true;
-  }
-
-  onRemove( event ) {
-    return true;
-  }
-
-  onSave( event ) {
-    return true;
-  }
-
-  // Valores default quando criar um projeto novo
-  setDefaultValue( typeProject: string ) {
-    this.project.lineProduct = 1;
-    this.project.typeProduct = typeProject;
-
-    this.project.gdc_upload_archive = ( ( typeProject === 'D' ) ? 'DATASUL.zip' :
-                                        ( typeProject === 'R' ) ? 'TOTVSANALYTICS.zip' : 'PROTHEUS.zip' );
-
-    if ( typeProject === 'R' ) {
-      this.project.gdc_script_folder = 'script';
-    }
-
-    this.project.gdc_tsa = false;
-    this.project.gdc_unlock = false;
-  }
-
-  getProjectsByProfile( profile: string ) {
-    this.listProjects = [ ];
-    this._userService.getProjects( profile ).subscribe(
-        ( result: any ) => {
-          console.log(result);
-          for ( let i = 0; i < result.body.projects.length; i ++ ) {
-            // Trata a url do project para pegar somente o id
-            let idProject = result.body.projects[i].project.links.self;
-            const lastBar = idProject.lastIndexOf( '/' ) + 1;
-            idProject = idProject.slice( lastBar );
-
-            let option: PoSelectOption;
-            
-            console.log(result.body.projects[i].project.meta.title);
-            option = { label: result.body.projects[i].project.meta.title + ' - ' + idProject, value: idProject };
-            
-            this.listProjects = [...this.listProjects, { label: result.body.projects[i].project.meta.title + ' - ' + idProject, value: idProject }];
-          }
-
-          if ( ( this.project.gdc_projectId === undefined ) || ( this.project.gdc_projectId === '' ) ) {
-            if ( this.listProjects.length > 0 ) {
-              this.project.gdc_projectId = this.listProjects[0].value.toString();
-              this.setUploadUrl();
-              this.loadProcess( this.project.gdc_projectId );
-            }
-          }
-        },
-        error => {
-          console.log( error );
-        }
-    );
-  }
-
-  loadProjects() {
-    let profile: string;
-    return new Promise<void>( ( resolve, reject ) => {
-      this._userService.login( this.project.gdc_username, this.project.gdc_password )
-        .subscribe(
-          res => {
-            // Trata o retorno para obter o profile do usuário
-            profile = res.userLogin.profile;
-            const lastBar = profile.lastIndexOf( '/' ) + 1;
-            profile = profile.slice( lastBar );
-            this._sessionService.TOKEN_SST = res.userLogin.token;
-            
-            
-            this._userService.refreshToken().subscribe(res2 => {
-              this._sessionService.TOKEN_TT = res2.body.userToken.token;
-              this.getProjectsByProfile( profile );
-            resolve();
-            });
-            
-            
-          },
-          error => {
-            console.log( error );
-            reject();
-          });
-      });
-  }
-
-  loadProcess( idProject: string ) {
-    const baseUrl = 'https://analytics.totvs.com.br';
-    this._userService.getProcess( idProject ).subscribe(
-      ( result: any ) => {
-        this.listProcess = [ ];
-        for ( let i = 0; i < result.processes.items.length; i ++ ) {
-          const process = baseUrl + result.processes.items[i].process.links.self;
-          let option: PoSelectOption;
-          option = { label: process, value: process };
-          this.listProcess.push( option );
-        }
-      },
-      error => {
-        console.log( error );
-      }
-    );
-  }
-
-  loadGraph( process: string ) {
-    this._userService.getGraphs( process ).subscribe(
-        ( result: any ) => {
-          this.listGraph = [ ];
-          for ( let i = 0; i < result.process.executables.length; i ++ ) {
-            const graph = result.process.executables[i];
-            let option: PoSelectOption;
-            option = { label: graph, value: graph };
-            this.listGraph.push( option );
-
-            if ( ( this.project.gdc_etl_graph === undefined ) || ( this.project.gdc_etl_graph === '' ) ) {
-              if ( option.label.toUpperCase().indexOf( 'MAIN' ) !== -1 ) {
-                this.project.gdc_etl_graph = option.value.toString();
-              }
-            }
-          }
-      },
-      error => {
-        console.log( error );
-      }
-    );
-  }
-
-  onChangeProject() {
-    this.project.gdc_etl_process_url = '';
-    this.listProcess = [ ];
-    this.loadProcess( this.project.gdc_projectId );
-    this.project.gdc_etl_graph = '';
-    this.listGraph = [ ];
-
-    if (this.project.gdc_projectId !== '' ) {
-      this.setUploadUrl();
-    }
-  }
-
-  setUploadUrl() {
-    const baseUrl = 'https://secure-di.gooddata.com';
-    this.project.gdc_upload_url = `${baseUrl}/project-uploads/${this.project.gdc_projectId}/today/`;
-  }
-
-  onChangeProcess() {
-    this.project.gdc_etl_graph = '';
-    this.listGraph = [ ];
-    this.loadGraph( this.project.gdc_etl_process_url );
-  }
-
-  loadProjectBanner( ) {
-    this.loadProjects( ).then(
-      ( ) => {
-        const thfNotification: PoNotification = {
-          message: 'Projetos carregados com sucesso!',
-          orientation: PoToasterOrientation.Top
-        };
-        this.thfNotification.success( thfNotification );
-      },
-      ( ) => {
-        const thfNotification: PoNotification = {
-          message: 'Erro ao carregar projetos!',
-          orientation: PoToasterOrientation.Top
-        };
-        this.thfNotification.error( thfNotification );
-      }
-    );
-  }
-
+      
+    } else {
+      
+  }*/
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
   enterPassword( event ) {
     event.preventDefault( );
-    this.loadProjectBanner();
+    this.getProjects();
   }
-
+  
+  public focusParams() {
+    this.javaParams.nativeElement.click();
+  }
+  
   selectFolder( type: number) {
    
   }
@@ -379,68 +454,7 @@ export class ProjectAddComponent {
   selectFileMyProperties() {
     
   }
-
-  loadJava() {
-    return new Promise<void>( ( resolve, reject ) => {
-      this._javaService.getJavaConfigurations().subscribe(
-        ( result: Array<any> ) => {
-          this.listJava = [];
-          let option: PoSelectOption;
-          for ( let i = 0; i < result.length; i ++ ) {
-            option = { label: result[i].name, value: result[i].id };
-            this.listJava.push( option );
-          }
-          resolve();
-        },
-        error => {
-          console.error( error );
-          reject();
-        }
-      );
-    });
-  }
-
-  loadDataBase() {
-    return new Promise<void>( ( resolve, reject ) => {
-      this._dataBaseService.getDataBaseList().subscribe(
-        ( dataBase ) => {
-          this.listDataBase = [];
-          let option: PoSelectOption;
-          for ( let i = 0; i < dataBase.length; i ++ ) {
-            option = { label: dataBase[i].name + ' - ' + dataBase[i].jdbc_driver, value: dataBase[i].id };
-            this.listDataBase.push( option );
-
-            if ( ( this.project.gdc_etl_graph === undefined ) || ( this.project.gdc_etl_graph === '' ) ) {
-              if ( option.label.toUpperCase().indexOf( 'MAIN' ) !== -1 ) {
-                this.project.gdc_etl_graph = option.value.toString();
-              }
-            }
-          }
-          resolve();
-        },
-        error => {
-          console.error( error );
-          reject();
-        }
-      );
-    });
-  }
-
-  onChangeLineProject() {
-    if ( this.project.typeProduct === 'P' ) {
-      if ( this.project.lineProduct === 1 ) {
-        this.project.pathMyProperties = '';
-        this.project.gdc_upload_archive = 'PROTHEUS.zip';
-        this.project.gdc_tsa = false;
-        this.project.gdc_unlock = false;
-      } else if ( this.project.lineProduct === 2 ) {
-        this.project.gdc_upload_archive = 'TOTVSSMARTANALYTICS.zip';
-        this.project.gdc_tsa = true;
-        this.project.gdc_unlock = false;
-      }
-    }
-  }
-
+  
   dataBaseAdd() {
     this.showModalDataBase = true;
     this.modalService.open( 'modal-data-base' );
@@ -448,12 +462,12 @@ export class ProjectAddComponent {
 
   closeModalDataBase() {
     this.showModalDataBase = false;
-    this.modalService.close( 'modal-data-base' );
+    this.modalService.close( 'modal-data-base' );/*
     this.loadDataBase().then( ( ) => {
       if ( ( this.project.dataBaseId === null ) && ( this.listDataBase.length === 1) ) {
         this.project.dataBaseId = this.listDataBase[0].value.toString();
       }
-    });
+    });*/
   }
 
   javaAdd() {
@@ -463,12 +477,12 @@ export class ProjectAddComponent {
 
   closeModalJava() {
     this.showModalJava = false;
-    this.modalService.close( 'modal-java' );
+    this.modalService.close( 'modal-java' );/*
     this.loadJava().then( ( ) => {
       if ( ( ( this.project.javaConfigurationId === null ) || ( this.project.javaConfigurationId === undefined ) ) &&
         ( this.listJava.length === 1) ) {
           this.project.javaConfigurationId = this.listJava[0].value.toString();
       }
-    });
+    });*/
   }
 }

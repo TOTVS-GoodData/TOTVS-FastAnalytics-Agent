@@ -1,15 +1,46 @@
 {
+  "build": {
+    "appId": "com.example.Agent",
+    "productName": "TOTVS Agent Analytics",
+    "files": [
+      "**/*",
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "release-builds",
+      "buildResources": "dist"
+    },
+    "asar": false,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "publish": [
+        "github"
+      ]
+    },
+    "nsis": {
+      "runAfterFinish": true
+    }
+  },
   "name": "Totvs-Agent",
-  "version": "1.0.0",
-  "description": "Totvs Agent Analytics",
+  "version": "1.0.4",
+  "description": "Programa de envio de dados via upload (WebDav), para a plataforma GoodData.",
   "main": "electron-main.js",
   "scripts": {
+    "pack": "build --dir",
+    "dist": "build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-angular": "ng serve",
+    "start": "ng serve",
     "test-electron": "ng build --configuration production && electron .",
     "package-win": "electron-packager . Totvs-Agent --overwrite --platform=win32 --arch=x64 --icon=analytics.ico --asar=true --prune=true --out=release-builds --win32metadata.requested-execution-level=requireAdministrator --win32metadata.CompanyName=Totvs --appCopyright=Totvs --ignore='^/(agent|schedule|db.json)'",
     "package-linux": "electron-packager . Totvs-Agent --overwrite --platform=linux --arch=x64 --icon=analytics.ico --asar=true --prune=true --out=release-builds --ignore='^/(agent|schedule|db.json)'",
-    "sonar": "sonar-scanner"
+    "sonar": "sonar-scanner",
+    "build": "ng build --configuration production",
+    "publish": "electron-builder build --win --x64 --publish always",
+    "electron": "electron .",
+    "electron-build": "ng build && electron .",
+    "electron-package": "electron-packager . FarmhubCompanyDashboard --platform=win32 --arch=x64"
   },
   "author": "TOTVS",
   "license": "ISC",
@@ -30,6 +61,8 @@
     "@totvs/thf-theme-kendo": "^4.0.1",
     "arc4": "^3.4.0",
     "core-js": "^2.5.4",
+    "electron-log": "^5.0.0-beta.16",
+    "electron-updater": "^5.3.0",
     "fs-extra": "^7.0.1",
     "hammerjs": "^2.0.8",
     "json-server": "^0.14.0",
@@ -37,7 +70,6 @@
     "ngx-electronyzer": "^1.0.0",
     "rxjs": "~7.5.5",
     "tslib": "^2.0.0",
-    "update-electron-app": "^2.0.1",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
@@ -51,6 +83,7 @@
     "ajv": "^7.2.4",
     "codelyzer": "^6.0.0",
     "electron": "^22.2.0",
+    "electron-builder": "^23.6.0",
     "jasmine-core": "~3.6.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~6.4.1",

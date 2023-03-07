@@ -1,3 +1,31 @@
+.m-left {
+  margin-left: auto;
+}
+
+.vertical-align {
+  align-items: center;
+}
+
+.db-row {
+  max-width: 50%;
+}
+
+.conf-row {
+  max-width: 100%;
+}
+
+.conf-select {
+  flex-grow: 1;
+}
+
+.db-select {
+  flex-grow: 1;
+}
+
+.footer {
+  justify-content: right;
+}
+
 @media screen and (max-width: 1366px) {
 
     .buttom-folder{

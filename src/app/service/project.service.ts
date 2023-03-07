@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { merge, flatMap, map, switchMap, mergeMap } from 'rxjs/operators';
 
-import { DatabaseData, Project, DataBase } from '../utilities/interfaces';
+import { DatabaseData, Project, DataBase , Java} from '../utilities/interfaces';
 import { ServerService } from './server.service';
 
 import { environment } from '../../environments/environment';
@@ -68,14 +68,17 @@ export class ProjectService {
     return this.http.get(this.url);
   }
 
-  saveProject( project: Project ) {
-    if ( project.id ) {
-      return this.http.put( `${this.apiUrl}/${project.id}`, project );
+  public saveProject(project: Project): Observable<boolean> {
+    return new Observable((obs) => { obs.next(true); obs.complete(); });
+    
+    /*
+    if (project.id) {
+      return this.http.put(this.getDataUrl() + '/' + project.id, project);
     } else {
-      return this.http.post( this.apiUrl, project );
-    }
+      return this.http.post(this.getDataUrl(), project);
+    }*/
   }
-
+  
   deleteProject( id: string ) {
     return this.http.delete( `${this.apiUrl}/${id}/` );
   }
@@ -103,6 +106,16 @@ export class ProjectService {
     } else {
       return this.loadData().pipe(map((db: any) => {
         return this.data.dataBases;
+      }));
+    }
+  }
+  
+  public getJavaConfiguration(): Observable<Java[]> {
+    if (this.data !== null) {
+      return new Observable((obs) => { obs.next(this.data.javaConfigurations); obs.complete(); });
+    } else {
+      return this.loadData().pipe(map((j: any) => {
+        return this.data.javaConfigurations;
       }));
     }
   }

@@ -7,6 +7,9 @@ import { PoPageModule } from '@po-ui/ng-components';
 import { PoFieldModule } from '@po-ui/ng-components';
 import { PoInfoModule } from '@po-ui/ng-components';
 import { PoButtonModule } from '@po-ui/ng-components';
+import { PoListViewModule } from '@po-ui/ng-components';
+import { PoContainerModule } from '@po-ui/ng-components';
+import { PoGridModule } from '@po-ui/ng-components';
 
 import { ProjectAddComponent } from '../project-add/project-add.component';
 import { DataBaseService } from '../service/data-base.service';
@@ -26,6 +29,9 @@ import { JavaAddModule } from '../java-add/java-add.module';
     imports: [
         CommonModule,
         FormsModule,
+      PoGridModule,
+      PoListViewModule,
+      PoContainerModule,
         HttpClientModule,
         DataBaseAddModule,
         ModalModule,

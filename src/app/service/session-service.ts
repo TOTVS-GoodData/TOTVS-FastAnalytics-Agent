@@ -14,6 +14,7 @@ export class SessionService {
   public clear(): void {
     this._ENVIRONMENT = null;
     this._SERVER = null;
+    this._USER_ID = null;
     this._TOKEN_TT = null;
     this._TOKEN_SST = null;
   }
@@ -41,6 +42,15 @@ export class SessionService {
     this._SERVER = server;
   }
   
+  private _USER_ID: string;
+  get USER_ID(): string {
+    return this._USER_ID;
+  }
+  
+  set USER_ID(user_id: string) {
+    this._USER_ID = user_id;
+  }
+
   private _TOKEN_TT: string;
   get TOKEN_TT(): string {
     return this._TOKEN_TT;
